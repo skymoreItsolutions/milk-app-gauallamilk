@@ -12,9 +12,6 @@ const ExclusiveOffer = () => {
     const dispatch = useDispatch();
     const cart = useSelector((state) => state.cart.cart);
 
-      useEffect(() => {
-        console.log("Cart updated:", cart);
-    }, [cart]);
     useEffect(() => {
         Animated.timing(fadeAnim, {
             toValue: 1,
@@ -23,37 +20,19 @@ const ExclusiveOffer = () => {
         }).start();
     }, []);
 
-    const animateQuantity = (id, direction) => {
-        if (!animatedValues.current[id]) {
-            animatedValues.current[id] = new Animated.Value(0); // Ensure initialization
-        }
-        
-        animatedValues.current[id].setValue(direction === 'up' ? 20 : -20);
-        
-        Animated.timing(animatedValues.current[id], {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-        }).start();
-    };
-    
-
     const increaseQuantity = (item) => {
         dispatch(incrementQuantity(item));
-        animateQuantity(item.id, 'up');
     };
-
+    
     const decreaseQuantity = (item) => {
         const cartItem = cart.find((cartItem) => cartItem.id === item.id);
-        
         if (cartItem && cartItem.quantity === 1) {
             dispatch(removeFromCart(item));
         } else {
             dispatch(decrementQuantity(item));
         }
-
-        animateQuantity(item.id, 'down');
     };
+    
 
     return (
         <View style={styles.container}>
@@ -87,8 +66,7 @@ const ExclusiveOffer = () => {
 
                                 <View style={styles.priceContainer}>
                                     <View style={styles.priceWrapper}>
-                                        <FontAwesome name="dollar" size={14} color="#53B175" /> 
-                                        <Text style={styles.productPrice}>{item.price.toFixed(2)}</Text>
+                                        <Text style={styles.productPrice}>₹{item.price.toFixed(2)}</Text>
                                     </View>
                                     <View style={styles.reviewContainer}>
                                         <FontAwesome name="star" size={14} color="#FFD700" />
@@ -103,18 +81,7 @@ const ExclusiveOffer = () => {
                                         </TouchableOpacity>
 
                                         <View style={styles.quantityWrapper}>
-                                            <Animated.Text
-                                                style={[
-                                                    styles.quantityText,
-                                                    {
-                                                        transform: [
-                                                            { translateY: animatedValues.current[item.id] || new Animated.Value(0) },
-                                                        ],
-                                                    },
-                                                ]}
-                                            >
-                                                {quantity}
-                                            </Animated.Text>
+                                        <Text style={styles.quantityText}>{quantity}</Text>
                                         </View>
 
                                         <TouchableOpacity onPress={() => increaseQuantity(item)} style={styles.quantityButton}>
