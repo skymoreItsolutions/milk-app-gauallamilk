@@ -5,13 +5,14 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Carousel from '../../components/home/Carousel';
 import ExclusiveOffer from '../../components/home/ExclusiveOffer';
+import BestSeller from '../../components/home/BestSeller';
 
 
 const Home = () => {
   const [locationServiceEnabled, setLocationServicesEnabled] = useState(false);
   const [displayCurrentAddress, setCurrentAddress] = useState("Fetching your location...");
   const [searchText, setSearchText] = useState("");
-
+  const scrollY = useRef(new Animated.Value(0)).current;
   const cowPosition = useRef(new Animated.Value(-100)).current; 
 
   useEffect(() => {
@@ -75,7 +76,14 @@ const Home = () => {
   };
 
   return (
-    <ScrollView style={{ backgroundColor: 'white' }}>
+    <Animated.ScrollView 
+      style={{ backgroundColor: 'white' }}
+      onScroll={Animated.event(
+        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+        { useNativeDriver: true } 
+      )}
+      scrollEventThrottle={16}
+    >
       <View style={styles.container}>
         <Animated.View style={[styles.cowContainer, { transform: [{ translateY: cowPosition }] }]}>
           <FontAwesome6 name="cow" size={24} color="orange" />
@@ -106,8 +114,9 @@ const Home = () => {
 
         <Carousel />
         <ExclusiveOffer/>
+        <BestSeller scrollY={scrollY} />
       </View>
-    </ScrollView>
+      </Animated.ScrollView>
   );
 };
 

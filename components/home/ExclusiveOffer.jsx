@@ -77,7 +77,7 @@ const ExclusiveOffer = () => {
 
                             <View style={styles.priceContainer}>
                                 <View style={styles.priceWrapper}>
-                                    <FontAwesome name="dollar" size={14} color="#53B175" />
+                                    <FontAwesome name="dollar" size={14} color="#53B175" /> 
                                     <Text style={styles.productPrice}>{item.price.toFixed(2)}</Text>
                                 </View>
                                 <View style={styles.reviewContainer}>
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
         color: 'green',
         fontSize: 16,
         textShadowColor: 'rgba(0, 0, 0, 0.3)',
-        textShadowOffset: { width: 0, height: 4 },
+        textShadowOffset: { width: 3, height: 3 },
         textShadowRadius: 3,
     },
     card: {
