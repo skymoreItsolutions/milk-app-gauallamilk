@@ -1,14 +1,20 @@
 import { StyleSheet, Text, TouchableOpacity, View, FlatList, Image, Animated } from 'react-native';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
 import ExclusiveItems from '../../data/ExclusiveItems';
 import * as Haptics from 'expo-haptics';
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, decrementQuantity, incrementQuantity, removeFromCart } from "../../redux/CartReducer";
 
 const ExclusiveOffer = () => {
-    const [quantities, setQuantities] = useState({});
     const animatedValues = useRef({});
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const dispatch = useDispatch();
+    const cart = useSelector((state) => state.cart.cart);
 
+      useEffect(() => {
+        console.log("Cart updated:", cart);
+    }, [cart]);
     useEffect(() => {
         Animated.timing(fadeAnim, {
             toValue: 1,
@@ -19,34 +25,34 @@ const ExclusiveOffer = () => {
 
     const animateQuantity = (id, direction) => {
         if (!animatedValues.current[id]) {
-            animatedValues.current[id] = new Animated.Value(0);
+            animatedValues.current[id] = new Animated.Value(0); // Ensure initialization
         }
+        
         animatedValues.current[id].setValue(direction === 'up' ? 20 : -20);
+        
         Animated.timing(animatedValues.current[id], {
             toValue: 0,
             duration: 200,
             useNativeDriver: true,
         }).start();
     };
+    
 
-    const increaseQuantity = (id) => {
-        setQuantities((prev) => {
-            const newQty = (prev[id] || 0) + 1;
-            animateQuantity(id, 'up');
-            return { ...prev, [id]: newQty };
-        });
+    const increaseQuantity = (item) => {
+        dispatch(incrementQuantity(item));
+        animateQuantity(item.id, 'up');
     };
 
-    const decreaseQuantity = (id) => {
-        setQuantities((prev) => {
-            if (!prev[id] || prev[id] === 1) {
-                const updated = { ...prev };
-                delete updated[id];
-                return updated;
-            }
-            animateQuantity(id, 'down');
-            return { ...prev, [id]: prev[id] - 1 };
-        });
+    const decreaseQuantity = (item) => {
+        const cartItem = cart.find((cartItem) => cartItem.id === item.id);
+        
+        if (cartItem && cartItem.quantity === 1) {
+            dispatch(removeFromCart(item));
+        } else {
+            dispatch(decrementQuantity(item));
+        }
+
+        animateQuantity(item.id, 'down');
     };
 
     return (
@@ -64,66 +70,71 @@ const ExclusiveOffer = () => {
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.card}>
-                            <Image source={{ uri: item.image }} style={styles.productImage} />
+                    renderItem={({ item }) => {
+                        const cartItem = cart.find((cartItem) => cartItem.id === item.id);
+                        const quantity = cartItem ? cartItem.quantity : 0;
 
-                            <View style={styles.nameContainer}>
-                                <Text style={styles.productName}>{item.name}</Text>
-                                <Text style={styles.productQuantity}>{item.quantity}</Text>
-                            </View>
+                        return (
+                            <TouchableOpacity style={styles.card}>
+                                <Image source={{ uri: item.image }} style={styles.productImage} />
 
-                            <View style={styles.flexSpacer} />
-
-                            <View style={styles.priceContainer}>
-                                <View style={styles.priceWrapper}>
-                                    <FontAwesome name="dollar" size={14} color="#53B175" /> 
-                                    <Text style={styles.productPrice}>{item.price.toFixed(2)}</Text>
+                                <View style={styles.nameContainer}>
+                                    <Text style={styles.productName}>{item.name}</Text>
+                                    <Text style={styles.productQuantity}>{item.size}</Text>
                                 </View>
-                                <View style={styles.reviewContainer}>
-                                    <FontAwesome name="star" size={14} color="#FFD700" />
-                                    <Text style={styles.reviewText}>{item.review}</Text>
-                                </View>
-                            </View>
 
-                            {quantities[item.id] ? (
-                                <View style={styles.quantityContainer}>
-                                    <TouchableOpacity onPress={() => decreaseQuantity(item.id)} style={styles.quantityButton}>
-                                        <Text style={styles.quantityText}>-</Text>
-                                    </TouchableOpacity>
+                                <View style={styles.flexSpacer} />
 
-                                    <View style={styles.quantityWrapper}>
-                                        <Animated.Text
-                                            style={[
-                                                styles.quantityText,
-                                                {
-                                                    transform: [
-                                                        { translateY: animatedValues.current[item.id] || new Animated.Value(0) },
-                                                    ],
-                                                },
-                                            ]}
-                                        >
-                                            {quantities[item.id]}
-                                        </Animated.Text>
+                                <View style={styles.priceContainer}>
+                                    <View style={styles.priceWrapper}>
+                                        <FontAwesome name="dollar" size={14} color="#53B175" /> 
+                                        <Text style={styles.productPrice}>{item.price.toFixed(2)}</Text>
                                     </View>
-
-                                    <TouchableOpacity onPress={() => increaseQuantity(item.id)} style={styles.quantityButton}>
-                                        <Text style={styles.quantityText}>+</Text>
-                                    </TouchableOpacity>
+                                    <View style={styles.reviewContainer}>
+                                        <FontAwesome name="star" size={14} color="#FFD700" />
+                                        <Text style={styles.reviewText}>{item.review}</Text>
+                                    </View>
                                 </View>
-                            ) : (
-                                <TouchableOpacity
-                                    style={styles.addToCartButton}
-                                    onPress={() => {
-                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                        increaseQuantity(item.id);
-                                    }}
-                                >
-                                    <Text style={styles.addToCartText}>Add to Cart</Text>
-                                </TouchableOpacity>
-                            )}
-                        </TouchableOpacity>
-                    )}
+
+                                {quantity > 0 ? (
+                                    <View style={styles.quantityContainer}>
+                                        <TouchableOpacity onPress={() => decreaseQuantity(item)} style={styles.quantityButton}>
+                                            <Text style={styles.quantityText}>-</Text>
+                                        </TouchableOpacity>
+
+                                        <View style={styles.quantityWrapper}>
+                                            <Animated.Text
+                                                style={[
+                                                    styles.quantityText,
+                                                    {
+                                                        transform: [
+                                                            { translateY: animatedValues.current[item.id] || new Animated.Value(0) },
+                                                        ],
+                                                    },
+                                                ]}
+                                            >
+                                                {quantity}
+                                            </Animated.Text>
+                                        </View>
+
+                                        <TouchableOpacity onPress={() => increaseQuantity(item)} style={styles.quantityButton}>
+                                            <Text style={styles.quantityText}>+</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={styles.addToCartButton}
+                                        onPress={() => {
+                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                            dispatch(addToCart(item));
+                                        }}
+                                    >
+                                        <Text style={styles.addToCartText}>Add to Cart</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </TouchableOpacity>
+                        );
+                    }}
                 />
             </Animated.View>
         </View>
@@ -149,9 +160,6 @@ const styles = StyleSheet.create({
     seeAllText: {
         color: 'green',
         fontSize: 16,
-        textShadowColor: 'rgba(0, 0, 0, 0.3)',
-        textShadowOffset: { width: 3, height: 3 },
-        textShadowRadius: 3,
     },
     card: {
         borderWidth: 1,

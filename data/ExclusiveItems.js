@@ -7,7 +7,7 @@ const ExclusiveItems = [
       review: 4.8,
       nutrients: ["Vitamin C", "Fiber", "Antioxidants"],
       productDetails: "Freshly picked organic apples, great for health and immunity.",
-      quantity: "1kg",
+      size: "1kg",
     },
     {
       id: 2,
@@ -17,7 +17,7 @@ const ExclusiveItems = [
       review: 4.6,
       nutrients: ["Fiber", "Protein", "Iron"],
       productDetails: "Soft and healthy whole wheat bread, perfect for breakfast.",
-      quantity: "500g",
+      size: "500g",
     },
     {
       id: 3,
@@ -27,7 +27,7 @@ const ExclusiveItems = [
       review: 4.7,
       nutrients: ["Calcium", "Protein", "Vitamin D"],
       productDetails: "Pure and fresh milk from organic farms.",
-      quantity: "1L",
+      size: "1L",
     },
     {
       id: 4,
@@ -37,7 +37,7 @@ const ExclusiveItems = [
       review: 4.5,
       nutrients: ["Fiber", "Magnesium", "Iron"],
       productDetails: "High-quality brown rice for a healthy diet.",
-      quantity: "1kg",
+      size: "1kg",
     },
     {
       id: 5,
@@ -47,7 +47,7 @@ const ExclusiveItems = [
       review: 4.9,
       nutrients: ["Vitamin A", "Fiber", "Beta Carotene"],
       productDetails: "Crunchy and fresh carrots, great for snacks and salads.",
-      quantity: "500g",
+      size: "500g",
     },
     {
       id: 6,
@@ -57,7 +57,7 @@ const ExclusiveItems = [
       review: 4.8,
       nutrients: ["Antioxidants", "Enzymes", "Minerals"],
       productDetails: "Pure and natural honey, perfect for sweetening and health benefits.",
-      quantity: "500g",
+      size: "500g",
     },
     {
       id: 7,
@@ -67,7 +67,7 @@ const ExclusiveItems = [
       review: 4.9,
       nutrients: ["Protein", "Vitamin E", "Healthy Fats"],
       productDetails: "Crunchy and nutritious almonds, great for snacking.",
-      quantity: "250g",
+      size: "250g",
     },
     {
       id: 8,
@@ -77,7 +77,7 @@ const ExclusiveItems = [
       review: 4.7,
       nutrients: ["Vitamin C", "Potassium", "Lycopene"],
       productDetails: "Juicy and ripe tomatoes, perfect for cooking and salads.",
-      quantity: "1kg",
+      size: "1kg",
     },
     {
       id: 9,
@@ -87,7 +87,7 @@ const ExclusiveItems = [
       review: 4.6,
       nutrients: ["Antioxidants", "Catechins", "Flavonoids"],
       productDetails: "Premium quality organic green tea, rich in health benefits.",
-      quantity: "100g",
+      size: "100g",
     },
     {
       id: 10,
@@ -97,7 +97,7 @@ const ExclusiveItems = [
       review: 4.8,
       nutrients: ["Protein", "Calcium", "Healthy Fats"],
       productDetails: "Fresh and soft paneer, perfect for curries and salads.",
-      quantity: "500g",
+      size: "500g",
     },
   ];
   

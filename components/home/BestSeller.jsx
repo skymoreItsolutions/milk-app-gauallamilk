@@ -62,7 +62,7 @@ const BestSeller = ({ scrollY }) => {
                     <Image source={{ uri: item.image }} style={styles.image} />
                     <View style={styles.textContainer}>
                         <Text style={styles.cardTitle} numberOfLines={2}>{item.name}</Text>
-                        <Text style={styles.cardQuantity}>{item.quantity}</Text>
+                        <Text style={styles.cardQuantity}>{item.size}</Text>
                     </View>
                     <View style={styles.bottomContainer}>
                         <Text style={styles.price}>₹{item.price}</Text>
