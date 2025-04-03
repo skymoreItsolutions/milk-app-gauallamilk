@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View, Animated, Image } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, Animated, Image, Platform } from "react-native";
 import React, { useState } from "react";
 import data from "../../data/ExclusiveItems";
 import { FontAwesome } from "@expo/vector-icons";
@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
     cardWrapper: {
         flex: 1, 
         margin: 5,
+        paddingBottom:20
     },
     headerContainer: {
         marginBottom: 10,
