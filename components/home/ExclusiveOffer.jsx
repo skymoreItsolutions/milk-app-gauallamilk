@@ -1,24 +1,16 @@
-import { StyleSheet, Text, TouchableOpacity, View, FlatList, Image, Animated } from 'react-native';
-import React, { useRef, useEffect } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, FlatList, Image } from 'react-native';
+import React from 'react';
 import { FontAwesome } from '@expo/vector-icons';
 import ExclusiveItems from '../../data/ExclusiveItems';
 import * as Haptics from 'expo-haptics';
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart, decrementQuantity, incrementQuantity, removeFromCart } from "../../redux/CartReducer";
+import { useRouter } from 'expo-router';
 
 const ExclusiveOffer = () => {
-    const animatedValues = useRef({});
-    const fadeAnim = useRef(new Animated.Value(0)).current;
     const dispatch = useDispatch();
     const cart = useSelector((state) => state.cart.cart);
-
-    useEffect(() => {
-        Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-        }).start();
-    }, []);
+    const router = useRouter();
 
     const increaseQuantity = (item) => {
         dispatch(incrementQuantity(item));
@@ -43,18 +35,28 @@ const ExclusiveOffer = () => {
                 </TouchableOpacity>
             </View>
 
-            <Animated.View style={{ opacity: fadeAnim }}>
+            <View >
                 <FlatList
                     data={ExclusiveItems}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => {
+                        if (!item) return null;
                         const cartItem = cart.find((cartItem) => cartItem.id === item.id);
                         const quantity = cartItem ? cartItem.quantity : 0;
 
                         return (
-                            <TouchableOpacity style={styles.card}>
+                            <TouchableOpacity style={styles.card}   onPress={() => router.push({ pathname: '/Productdetails', params: { 
+                                id: item.id.toString(),
+                                name: item.name,
+                                image: item.image,
+                                price: item.price.toString(),
+                                review: item.review.toString(),
+                                nutrients: JSON.stringify(item.nutrients),
+                                productDetails: item.productDetails,
+                                size: item.size,
+                            }})}>
                                 <Image source={{ uri: item.image }} style={styles.productImage} />
 
                                 <View style={styles.nameContainer}>
@@ -66,7 +68,8 @@ const ExclusiveOffer = () => {
 
                                 <View style={styles.priceContainer}>
                                     <View style={styles.priceWrapper}>
-                                        <Text style={styles.productPrice}>₹{item.price.toFixed(2)}</Text>
+                                    <Text style={styles.productPrice}>₹{Number(item.price).toFixed(2)}</Text>
+
                                     </View>
                                     <View style={styles.reviewContainer}>
                                         <FontAwesome name="star" size={14} color="#FFD700" />
@@ -103,7 +106,7 @@ const ExclusiveOffer = () => {
                         );
                     }}
                 />
-            </Animated.View>
+            </View>
         </View>
     );
 };
