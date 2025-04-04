@@ -2,8 +2,13 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import Entypo from '@expo/vector-icons/Entypo';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useSelector } from 'react-redux';
+import { Text, View } from 'react-native';
 
 export default function TabLayout() {
+  const cart = useSelector(state => state.cart.cart);
+const cartCount = cart.length;
+
   return (
     <Tabs
       screenOptions={{
@@ -36,7 +41,31 @@ export default function TabLayout() {
         name="cart"
         options={{
           title: 'Cart',
-          tabBarIcon: ({ color }) => <Entypo name="shopping-cart" size={24} color={color} />,
+          tabBarIcon: ({ color }) => (
+            <View style={{ position: 'relative' }}>
+              <Entypo name="shopping-cart" size={24} color={color} />
+              {cartCount > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -10,
+                    backgroundColor: 'red',
+                    borderRadius: 10,
+                    paddingHorizontal: 5,
+                    paddingVertical: 1,
+                    minWidth: 18,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
+                    {cartCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
