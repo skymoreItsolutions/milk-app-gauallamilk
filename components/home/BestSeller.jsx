@@ -1,32 +1,50 @@
 import { StyleSheet, Text, TouchableOpacity, View, Animated, Image, Platform } from "react-native";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import data from "../../data/ExclusiveItems";
 import { FontAwesome } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { addToCart, decrementQuantity, incrementQuantity, removeFromCart } from "../../redux/CartReducer";
+import { useDispatch, useSelector } from "react-redux";
 
 const BestSeller = ({ scrollY }) => {
-    const [quantities, setQuantities] = useState({});
+    const animatedValues = useRef({});
+    const dispatch = useDispatch();
+    const cart = useSelector((state) => state.cart.cart);
     const filteredData = Array.isArray(data) 
     ? data.filter((item) => item.id <= 10 && item.id >= 1).sort((a, b) => b.id - a.id) 
     : []; 
     
-    const increaseQuantity = (id) => {
-        setQuantities((prev) => ({
-            ...prev,
-            [id]: (prev[id] || 0) + 1,
-        }));
-    };
-
-    const decreaseQuantity = (id) => {
-        setQuantities((prev) => {
-            if (!prev[id] || prev[id] === 1) {
-                const updated = { ...prev };
-                delete updated[id];
-                return updated;
+    const getItemQuantity = (itemId) => {
+        const cartItem = cart.find((cartItem) => cartItem.id === itemId);
+        return cartItem ? cartItem.quantity : 0;
+      };
+        const animateQuantity = (id, direction) => {
+              if (!animatedValues.current[id]) {
+                  animatedValues.current[id] = new Animated.Value(0); 
+              }
+              
+              animatedValues.current[id].setValue(direction === 'up' ? 20 : -20);
+              
+              Animated.timing(animatedValues.current[id], {
+                  toValue: 0,
+                  duration: 200,
+                  useNativeDriver: true,
+              }).start();
+          };
+    const increaseQuantity = (item) => {
+            dispatch(incrementQuantity(item));
+            animateQuantity(item.id, 'up');
+        };
+        
+        const decreaseQuantity = (item) => {
+            const cartItem = cart.find((cartItem) => cartItem.id === item.id);
+            if (cartItem && cartItem.quantity === 1) {
+                dispatch(removeFromCart(item));
+            } else {
+                dispatch(decrementQuantity(item));
+                animateQuantity(item.id, 'down');
             }
-            return { ...prev, [id]: prev[id] - 1 };
-        });
-    };
+        };
 
     const renderItem = ({ item, index }) => {
         const inputRange = [-1, 0, index * 180, (index + 1) * 180];
@@ -71,22 +89,31 @@ const BestSeller = ({ scrollY }) => {
                             <Text style={styles.reviewText}>{item.review}</Text>
                         </View>
                     </View>
-                    {quantities[item.id] ? (
+                    {getItemQuantity(item.id) > 0 ? (
                         <View style={styles.quantityContainer}>
-                            <TouchableOpacity onPress={() => decreaseQuantity(item.id)} style={styles.quantityButton}>
+                            <TouchableOpacity onPress={() => decreaseQuantity(item)} style={styles.quantityButton}>
                                 <Text style={styles.quantityText}>-</Text>
                             </TouchableOpacity>
                             <View style={styles.quantityWrapper}>
-                                <Text style={styles.quantityText}>{quantities[item.id]}</Text>
+                               <Animated.Text
+                                                                               style={[
+                                                                                   styles.quantityText,
+                                                                                   {
+                                                                                       transform: [
+                                                                                           { translateY: animatedValues.current[item.id] || new Animated.Value(0) },
+                                                                                       ],
+                                                                                   },
+                                                                               ]}
+                                                                           >{getItemQuantity(item.id)}</Animated.Text>
                             </View>
-                            <TouchableOpacity onPress={() => increaseQuantity(item.id)} style={styles.quantityButton}>
+                            <TouchableOpacity  onPress={() => increaseQuantity(item)} style={styles.quantityButton}>
                                 <Text style={styles.quantityText}>+</Text>
                             </TouchableOpacity>
                         </View>
                     ) : (
                         <TouchableOpacity style={styles.addToCartButton} onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            increaseQuantity(item.id);
+                            dispatch(addToCart(item));
                         }}>
                             <Text style={styles.addToCartText}>Add to Cart</Text>
                         </TouchableOpacity>

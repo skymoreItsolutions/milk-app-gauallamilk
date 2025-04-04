@@ -1,57 +1,129 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Animated, Modal } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  Animated,
+  Modal,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
-import { cleanCart, decrementQuantity, incrementQuantity, removeFromCart } from "../../redux/CartReducer";
-import Entypo from '@expo/vector-icons/Entypo';
-import AntDesign from '@expo/vector-icons/AntDesign';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import {  useRouter } from "expo-router";
+import {
+  cleanCart,
+  decrementQuantity,
+  incrementQuantity,
+  removeFromCart,
+} from "../../redux/CartReducer";
+import Entypo from "@expo/vector-icons/Entypo";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useRouter } from "expo-router";
 
 const Cart = () => {
   const cart = useSelector((state) => state.cart.cart);
-  const animatedValues = useRef(cart.map(() => new Animated.Value(300))).current;
-  const emptyCartOpacity = useRef(new Animated.Value(0)).current;
   const dispatch = useDispatch();
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const router = useRouter()
-
-
+  const [simulateSuccess, setSimulateSuccess] = useState(true);
+  const [showFailureModal, setShowFailureModal] = useState(false);
+  const router = useRouter();
+  const emptyAnim = useRef(new Animated.Value(0)).current;
+  const quantityAnimRefs = useRef({});
+  
   useEffect(() => {
-    if (cart.length === 0) {
-      Animated.timing(emptyCartOpacity, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }).start();
-    }
-
-    cart.forEach((item, index) => {
-      if (animatedValues[index]._value === 300) {
-        Animated.timing(animatedValues[index], {
-          toValue: 0,
-          duration: 500,
-          delay: index * 100,
-          useNativeDriver: true,
-        }).start();
+    cart.forEach((item) => {
+      if (!quantityAnimRefs.current[item.id]) {
+        quantityAnimRefs.current[item.id] = new Animated.Value(1);
       }
     });
   }, [cart]);
+  const triggerQuantityAnim = (id) => {
+    const anim = quantityAnimRefs.current[id];
+    anim.setValue(0.8);
+    Animated.spring(anim, {
+      toValue: 1,
+      friction: 4,
+      useNativeDriver: true,
+    }).start();
+  };
+  
+  
 
-  const totalPrice = cart.reduce((acc, item) => acc + item.price * item.quantity, 0).toFixed(2);
+useEffect(() => {
+  if (cart.length === 0) {
+    Animated.timing(emptyAnim, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }
+}, [cart]);
+
+
+  const successFadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnimRefs = useRef([]);
+
+  useEffect(() => {
+    fadeAnimRefs.current = cart.map(() => new Animated.Value(0));
+    
+    fadeAnimRefs.current.forEach((anim, index) => {
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 500,
+        delay: index * 250,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [cart.length]);
+  
+  
+
+  useEffect(() => {
+    if (showSuccessModal) {
+      successFadeAnim.setValue(0);
+      Animated.timing(successFadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showSuccessModal]);
+
+  const totalPrice = cart
+    .reduce((acc, item) => acc + item.price * item.quantity, 0)
+    .toFixed(2);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-             <Text style={styles.title}>Cart</Text>
-           </View>
+        <Text style={styles.title}>Cart</Text>
+      </View>
       <View style={styles.divider} />
 
       {cart.length === 0 ? (
-        <Animated.View style={[styles.emptyCartContainer, { opacity: emptyCartOpacity }]}>
+        <Animated.View
+        style={[
+          styles.emptyCartContainer,
+          {
+            opacity: emptyAnim,
+            transform: [
+              {
+                translateY: emptyAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
           <Image
-            source={{ uri: "https://cdn-icons-png.flaticon.com/512/2038/2038854.png" }}
+            source={{
+              uri: "https://cdn-icons-png.flaticon.com/512/2038/2038854.png",
+            }}
             style={styles.emptyCartImage}
           />
           <Text style={styles.emptyCartText}>Your cart is empty!</Text>
@@ -59,52 +131,104 @@ const Cart = () => {
       ) : (
         <FlatList
           data={cart}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
           renderItem={({ item, index }) => (
             <Animated.View
-              style={[
-                styles.itemContainer,
-                { transform: [{ translateX: animatedValues[index] }] },
-              ]}
-            >
-              <Image source={{ uri: item.image }} style={styles.itemImage} />
-              <View style={styles.itemDetails}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemSize}>{item.size}</Text>
+  style={{
+    opacity: fadeAnimRefs.current[index] || 1,
+    transform: [
+      {
+        translateY:
+          fadeAnimRefs.current[index]?.interpolate({
+            inputRange: [0, 1],
+            outputRange: [15, 0],
+          }) || 0,
+      },
+      {
+        scale:
+          fadeAnimRefs.current[index]?.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.95, 1],
+          }) || 1,
+      },
+    ],
+  }}
+>
 
-                <View style={styles.quantityContainer}>
-                  <TouchableOpacity onPress={() => dispatch(decrementQuantity(item))} style={styles.quantityButton}>
-                    <Text style={styles.quantityTexts}>-</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.quantityValue}>{item.quantity}</Text>
-                  <TouchableOpacity onPress={() => dispatch(incrementQuantity(item))} style={styles.quantityButton}>
-                    <Text style={styles.quantityText}>+</Text>
-                  </TouchableOpacity>
+              <View style={styles.itemContainer}>
+                <Image source={{ uri: item.image }} style={styles.itemImage} />
+                <View style={styles.itemDetails}>
+                  <Text style={styles.itemName}>{item.name}</Text>
+                  <Text style={styles.itemSize}>{item.size}</Text>
+
+                  <View style={styles.quantityContainer}>
+                    <TouchableOpacity
+                     onPress={() => {
+                      dispatch(decrementQuantity(item));
+                      triggerQuantityAnim(item.id);
+                    }}
+                      style={styles.quantityButton}
+                    >
+                      <Text style={styles.quantityTexts}>-</Text>
+                    </TouchableOpacity>
+                    <Animated.Text
+                        style={[
+                          styles.quantityValue,
+                          {
+                            transform: [
+                              {
+                                scale:
+                                  quantityAnimRefs.current[item.id] || new Animated.Value(1),
+                              },
+                            ],
+                          },
+                        ]}
+                      >
+                        {item.quantity}
+                      </Animated.Text>
+
+                    <TouchableOpacity
+                     onPress={() => {
+                      dispatch(incrementQuantity(item));
+                      triggerQuantityAnim(item.id);
+                    }}
+                      style={styles.quantityButton}
+                    >
+                      <Text style={styles.quantityText}>+</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.itemAction}>
-                <TouchableOpacity onPress={() => dispatch(removeFromCart(item))}>
-                  <Ionicons name="close" size={20} color="gray" />
-                </TouchableOpacity>
-                <Text style={styles.itemPrice}>₹ {(item.price * item.quantity).toFixed(2)}</Text>
+                <View style={styles.itemAction}>
+                  <TouchableOpacity
+                    onPress={() => dispatch(removeFromCart(item))}
+                  >
+                    <Ionicons name="close" size={20} color="gray" />
+                  </TouchableOpacity>
+                  <Text style={styles.itemPrice}>
+                    ₹ {(item.price * item.quantity).toFixed(2)}
+                  </Text>
+                </View>
               </View>
             </Animated.View>
           )}
-          contentContainerStyle={{ paddingBottom: 100 }}
         />
       )}
 
       {cart.length > 0 && (
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.checkoutButton} onPress={() => setShowCheckoutModal(true)}>
+          <TouchableOpacity
+            style={styles.checkoutButton}
+            onPress={() => setShowCheckoutModal(true)}
+          >
             <Text style={styles.buttonText}>Go to Checkout </Text>
             <Text style={styles.price}>₹ {totalPrice}</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* MODAL for Payment Options */}
+      {/* Checkout Modal */}
       <Modal
         visible={showCheckoutModal}
         transparent
@@ -113,106 +237,221 @@ const Cart = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.checkoutModal}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Text style={styles.checkoutTitle}>CheckOut</Text>
-              <TouchableOpacity onPress={() => setShowCheckoutModal(false)} style={{marginBottom: 20}}>
+              <TouchableOpacity
+                onPress={() => setShowCheckoutModal(false)}
+                style={{ marginBottom: 20 }}
+              >
                 <Entypo name="cross" size={24} color="black" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.divider} />
             <TouchableOpacity style={styles.optionButton}>
-              <Text style={{color:'gray',fontSize:17,fontWeight:600}}>Delivery</Text>
-              <View style={{flexDirection:'row',alignItems:'center',gap:5}}>
+              <Text style={{ color: "gray", fontSize: 17, fontWeight: 600 }}>
+                Delivery
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                 <Text style={styles.optionText}>Select Method</Text>
                 <AntDesign name="right" size={15} color="black" />
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.optionButton}>
-              <Text style={{color:'gray',fontSize:17,fontWeight:600}}>Payment</Text>
-              <View style={{flexDirection:'row',alignItems:'center',gap:5}}>
-              <FontAwesome name="credit-card" size={24} color="black" />
+              <Text style={{ color: "gray", fontSize: 17, fontWeight: 600 }}>
+                Payment
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                <FontAwesome name="credit-card" size={24} color="black" />
                 <AntDesign name="right" size={15} color="black" />
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.optionButton}>
-              <Text style={{color:'gray',fontSize:17,fontWeight:600}}>Promo Code</Text>
-              <View style={{flexDirection:'row',alignItems:'center',gap:5}}>
+              <Text style={{ color: "gray", fontSize: 17, fontWeight: 600 }}>
+                Promo Code
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                 <Text style={styles.optionText}>Pick Discount</Text>
                 <AntDesign name="right" size={15} color="black" />
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.optionButton}>
-              <Text style={{color:'gray',fontSize:17,fontWeight:600}}>Total Cost</Text>
-              <View style={{flexDirection:'row',alignItems:'center',gap:5}}>
+              <Text style={{ color: "gray", fontSize: 17, fontWeight: 600 }}>
+                Total Cost
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                 <Text style={styles.optionText}>₹ {totalPrice}</Text>
                 <AntDesign name="right" size={15} color="black" />
               </View>
             </TouchableOpacity>
 
-            <Text style={{ color: 'gray', fontSize: 14 }}>
-            By placing an order you agree to our{' '}
-            <Text style={{ fontWeight: 'bold', color: 'black' }}>Terms and Conditions</Text>
+            <Text style={{ color: "gray", fontSize: 14 }}>
+              By placing an order you agree to our{" "}
+              <Text style={{ fontWeight: "bold", color: "black" }}>
+                Terms and Conditions
+              </Text>
+            </Text>
+
+            <TouchableOpacity
+              style={styles.placeOrderButton}
+              onPress={() => {
+                setShowCheckoutModal(false);
+              
+                setTimeout(() => {
+                  if (simulateSuccess) {
+                    setShowSuccessModal(true);
+                    dispatch(cleanCart());
+                  } else {
+                    setShowFailureModal(true);
+                  }
+                }, 300);
+              }}
+              
+            >
+              <FontAwesome
+                name="shopping-bag"
+                size={18}
+                color="white"
+                style={{ marginRight: 10 }}
+              />
+              <Text style={styles.placeOrderText}>Place Order</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.successContainer}>
+          <Image
+            source={require("../../assets/images/confirm.gif")}
+            style={styles.successImage}
+          />
+          <Text style={styles.successTitle}>Your Order has been accepted</Text>
+          <Text style={styles.successSubtitle}>
+            Your item has been placed and is on it's way to being processed
           </Text>
 
-           
-            <TouchableOpacity style={styles.placeOrderButton} onPress={() => {
-             
-  setShowCheckoutModal(false);
-  setTimeout(() => {
-    setShowSuccessModal(true);
-  }, 300);
-  dispatch(cleanCart());
-}}
->
-            <FontAwesome name="shopping-bag" size={18} color="white" style={{ marginRight: 10 }} />
-            <Text style={styles.placeOrderText}>Place Order</Text>
-          </TouchableOpacity>
+          <View style={styles.successButtonRow}>
+            <TouchableOpacity
+              style={styles.successBtnOutline}
+              onPress={() => {
+                router.replace("/account");
+                setShowSuccessModal(false);
+              }}
+            >
+              <Text
+                style={{
+                  color: "#53B175",
+                  fontWeight: "600",
+                  textAlign: "center",
+                }}
+              >
+                Track Order
+              </Text>
+            </TouchableOpacity>
 
-
+            <TouchableOpacity
+              style={styles.successBtnFilled}
+              onPress={() => {
+                router.replace("/home");
+                setShowSuccessModal(false);
+              }}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  fontWeight: "600",
+                  textAlign: "center",
+                }}
+              >
+                Back to Home
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
       <Modal
-  visible={showSuccessModal}
+  visible={showFailureModal}
   transparent
   animationType="fade"
-  onRequestClose={() => setShowSuccessModal(false)}
+  onRequestClose={() => setShowFailureModal(false)}
 >
-  <View style={styles.successContainer}>
-    <Image
-      source={require('../../assets/images/confirm.gif')}
-      style={styles.successImage}
-    />
-    <Text style={styles.successTitle}>Your Order has been accepted</Text>
-    <Text style={styles.successSubtitle}>Your item has been placed and is on it's way to being processed</Text>
-
-    <View style={styles.successButtonRow}>
-    <TouchableOpacity
-      style={styles.successBtnOutline}
-      onPress={() => {
-        router.replace('/account')
-        setShowSuccessModal(false);
+  <View
+    style={{
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.3)", 
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <View
+      style={{
+        backgroundColor: "#eff1f3",
+        borderRadius: 20,
+        padding: 24,
+        alignItems: "center",
+        width: "80%",
       }}
     >
-      <Text style={{ color: "#53B175", fontWeight: '600', textAlign: 'center' }}>Track Order</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={styles.successBtnFilled}
-      onPress={() => {
-       router.replace('/home')
-        setShowSuccessModal(false);
-      }}
-    >
-      <Text style={{ color: "white", fontWeight: '600', textAlign: 'center' }}>Back to Home</Text>
-    </TouchableOpacity>
-  </View>
+      <Image
+        source={require("../../assets/images/fail.gif")}
+        style={{
+          width: 120,
+          height: 120,
+          marginBottom: 16,
+        }}
+        resizeMode="cover"
+      />
+      <Text
+        style={{
+          fontSize: 22,
+          fontWeight: "bold",
+          color: "#d9534f",
+          marginBottom: 8,
+        }}
+      >
+        Order Failed
+      </Text>
+      <Text
+        style={{
+          fontSize: 16,
+          color: "#555",
+          textAlign: "center",
+          marginBottom: 20,
+        }}
+      >
+        Something went wrong while placing your order. Please try again.
+      </Text>
+      <TouchableOpacity
+        style={{
+          backgroundColor: "#d9534f",
+          paddingHorizontal: 20,
+          paddingVertical: 10,
+          borderRadius: 10,
+        }}
+        onPress={() => setShowFailureModal(false)}
+      >
+        <Text style={{ color: "white", fontWeight: "bold" }}>Try Again</Text>
+      </TouchableOpacity>
+    </View>
   </View>
 </Modal>
+
 
     </View>
   );
@@ -447,5 +686,41 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '100%',
   },
+  failureContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  failureImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  failureTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#ff4d4d",
+    marginBottom: 10,
+  },
+  failureSubtitle: {
+    fontSize: 16,
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: "#ff4d4d",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+  },
+  retryText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  
   
 });

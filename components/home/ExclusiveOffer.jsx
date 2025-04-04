@@ -1,5 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View, FlatList, Image } from 'react-native';
-import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, FlatList, Image, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
 import ExclusiveItems from '../../data/ExclusiveItems';
 import * as Haptics from 'expo-haptics';
@@ -8,12 +8,38 @@ import { addToCart, decrementQuantity, incrementQuantity, removeFromCart } from 
 import { useRouter } from 'expo-router';
 
 const ExclusiveOffer = () => {
+    const animatedValues = useRef({});
+    const fadeAnim = useRef(new Animated.Value(0)).current;
     const dispatch = useDispatch();
     const cart = useSelector((state) => state.cart.cart);
     const router = useRouter();
 
+    useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+        }).start();
+    }, []);
+
+    const animateQuantity = (id, direction) => {
+        if (!animatedValues.current[id]) {
+            animatedValues.current[id] = new Animated.Value(0); 
+        }
+        
+        animatedValues.current[id].setValue(direction === 'up' ? 20 : -20);
+        
+        Animated.timing(animatedValues.current[id], {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+        }).start();
+    };
+    
+
     const increaseQuantity = (item) => {
         dispatch(incrementQuantity(item));
+        animateQuantity(item.id, 'up');
     };
     
     const decreaseQuantity = (item) => {
@@ -22,6 +48,7 @@ const ExclusiveOffer = () => {
             dispatch(removeFromCart(item));
         } else {
             dispatch(decrementQuantity(item));
+            animateQuantity(item.id, 'down');
         }
     };
     
@@ -35,14 +62,13 @@ const ExclusiveOffer = () => {
                 </TouchableOpacity>
             </View>
 
-            <View >
+            <Animated.View style={{ opacity: fadeAnim }}>
                 <FlatList
                     data={ExclusiveItems}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => {
-                        if (!item) return null;
                         const cartItem = cart.find((cartItem) => cartItem.id === item.id);
                         const quantity = cartItem ? cartItem.quantity : 0;
 
@@ -84,7 +110,18 @@ const ExclusiveOffer = () => {
                                         </TouchableOpacity>
 
                                         <View style={styles.quantityWrapper}>
-                                        <Text style={styles.quantityText}>{quantity}</Text>
+                                            <Animated.Text
+                                                style={[
+                                                    styles.quantityText,
+                                                    {
+                                                        transform: [
+                                                            { translateY: animatedValues.current[item.id] || new Animated.Value(0) },
+                                                        ],
+                                                    },
+                                                ]}
+                                            >
+                                                {quantity}
+                                            </Animated.Text>
                                         </View>
 
                                         <TouchableOpacity onPress={() => increaseQuantity(item)} style={styles.quantityButton}>
@@ -106,7 +143,7 @@ const ExclusiveOffer = () => {
                         );
                     }}
                 />
-            </View>
+            </Animated.View>
         </View>
     );
 };
