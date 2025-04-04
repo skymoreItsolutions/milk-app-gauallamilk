@@ -1,32 +1,52 @@
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import React, { useState } from 'react';
+import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { useDispatch } from 'react-redux';
-import { decrementQuantity, incrementQuantity } from '../redux/CartReducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart, decrementQuantity, incrementQuantity, removeFromCart } from '../redux/CartReducer';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { addToWishlist, removeFromWishlist } from '../redux/WishListReducer';
 
 const Productdetails = () => {
   const params = useLocalSearchParams();
   const nutrients = JSON.parse(params.nutrients || '[]');
   const dispatch = useDispatch();
   const router = useRouter();
-
+  const wishlist = useSelector((state) => state.wishlist.wishlist);
+  const cart = useSelector((state) => state.cart.cart);
   const [isDescriptionVisible, setIsDescriptionVisible] = useState(true);
   const [isNutrientsVisible, setIsNutrientsVisible] = useState(false);
   const [isReviewsVisible, setIsReviewsVisible] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  const [selected, setSelected] = useState(false);
 
-  const toggleWishlist = () => setIsWishlisted(!isWishlisted);
+  const productId = Number(params.id);
+  const cartItem = cart.find((c) => c.id === productId);
+  const quantity = cartItem ? cartItem.quantity : 1;
 
   const item = {
-    id: params.id,
+    id: productId,
     name: params.name,
     image: params.image,
     price: params.price,
     size: params.size,
-    quantity,
+    quantity: quantity,
+  };
+
+  useEffect(() => {
+    setIsWishlisted(wishlist.some(isWishlisted => isWishlisted.id === item.id));
+    setSelected(cart.some(cartItem => cartItem.id === item.id));
+  }, [wishlist, cart]);
+
+  const handleBookmark = () => {
+    setIsWishlisted(!isWishlisted);
+    if (!isWishlisted) {
+      dispatch(addToWishlist(item));
+      Alert.alert(`${item?.name} added to Wishlist`);
+    } else {
+      dispatch(removeFromWishlist(item));
+      Alert.alert(`${item?.name} removed from Wishlist`);
+    }
   };
 
   const renderStars = (rating) => {
@@ -44,20 +64,17 @@ const Productdetails = () => {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer} contentContainerStyle={{ paddingBottom: 100 }}>
-      <View style={styles.imageWrapper}>
-  <Image source={{ uri: params.image }} style={styles.productImage} />
-  
-  
-        <View style={styles.topIcons}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
-            <AntDesign name="arrowleft" size={24} color="black" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="share-outline" size={24} color="black" />
-          </TouchableOpacity>
+        <View style={styles.imageWrapper}>
+          <Image source={{ uri: params.image }} style={styles.productImage} />
+          <View style={styles.topIcons}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
+              <AntDesign name="arrowleft" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <Ionicons name="share-outline" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-
 
         <View style={{ padding: 15 }}>
           <View style={styles.infoContainer}>
@@ -65,7 +82,7 @@ const Productdetails = () => {
               <Text style={styles.productName}>{params.name}</Text>
               <Text style={styles.productQuantity}>{params.size}</Text>
             </View>
-            <TouchableOpacity onPress={toggleWishlist}>
+            <TouchableOpacity onPress={handleBookmark}>
               <AntDesign
                 name={isWishlisted ? 'heart' : 'hearto'}
                 size={24}
@@ -75,29 +92,30 @@ const Productdetails = () => {
           </View>
 
           <View style={styles.priceRow}>
-            <View style={styles.quantityContainer}>
-              <TouchableOpacity
-                onPress={() => {
-                  if (quantity > 1) {
-                    setQuantity(quantity - 1);
-                    dispatch(decrementQuantity(item));
-                  }
-                }}
-                style={styles.quantityButton}
-              >
-                <Text style={styles.quantityTexts}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.quantityValue}>{quantity}</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setQuantity(quantity + 1);
-                  dispatch(incrementQuantity(item));
-                }}
-                style={styles.quantityButton}
-              >
-                <Text style={styles.quantityText}>+</Text>
-              </TouchableOpacity>
-            </View>
+          {selected ? (
+  <View style={styles.quantityContainer}>
+    <TouchableOpacity
+      onPress={() => {
+        if (quantity > 1) {
+          dispatch(decrementQuantity(item));
+        }
+      }}
+      style={styles.quantityButton}
+    >
+      <Text style={styles.quantityTexts}>-</Text>
+    </TouchableOpacity>
+    <Text style={styles.quantityValue}>{quantity}</Text>
+    <TouchableOpacity
+      onPress={() => {
+        dispatch(incrementQuantity(item));
+      }}
+      style={styles.quantityButton}
+    >
+      <Text style={styles.quantityText}>+</Text>
+    </TouchableOpacity>
+  </View>
+) : null}
+
             <Text style={styles.price}>₹{params.price}</Text>
           </View>
 
@@ -152,12 +170,25 @@ const Productdetails = () => {
         </View>
       </ScrollView>
 
-      {/* Bottom Add to Basket Button */}
       <View style={styles.addToBasketContainer}>
-        <TouchableOpacity style={styles.addToBasketButton}>
-          <Text style={styles.addToBasketText}>Add to Basket</Text>
-        </TouchableOpacity>
-      </View>
+  {!selected ? (
+    <TouchableOpacity
+      style={styles.addToBasketButton}
+      onPress={() => dispatch(addToCart(item))}
+    >
+      <Text style={styles.addToBasketText}>Add to Basket</Text>
+    </TouchableOpacity>
+  ) : (
+    <TouchableOpacity
+      style={[styles.addToBasketButton, { borderColor: '#ff5252',borderWidth:1,backgroundColor:'white' }]}
+      onPress={() => dispatch(removeFromCart({ ...item, quantity: 0 }))} 
+    >
+      <Text style={styles.removeToBasketText}>Remove from Cart</Text>
+    </TouchableOpacity>
+  )}
+</View>
+
+
     </View>
   );
 };
@@ -186,7 +217,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
   },
-  
   imageWrapper: {
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
@@ -298,4 +328,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  removeToBasketText:{
+    color: '#ff5252',
+    fontSize: 16,
+    fontWeight: 'bold',
+  }
 });

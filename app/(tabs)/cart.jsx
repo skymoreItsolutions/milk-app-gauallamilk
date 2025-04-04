@@ -32,6 +32,7 @@ const Cart = () => {
   const router = useRouter();
   const emptyAnim = useRef(new Animated.Value(0)).current;
   const quantityAnimRefs = useRef({});
+  console.log('cart',cart)
   
   useEffect(() => {
     cart.forEach((item) => {

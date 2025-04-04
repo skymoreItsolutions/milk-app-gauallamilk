@@ -1,6 +1,10 @@
 import React, { useRef, useEffect } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, cleanCart } from "../../redux/CartReducer";
+import { cleanWishlist } from "../../redux/WishListReducer";
+import { useRouter } from "expo-router";
 
 const favouriteItems = [
   { id: "1", name: "Sprite Can", size: "325ml", price: "$1.50", image: "https://cdn-icons-png.flaticon.com/128/8055/8055260.png" },
@@ -12,7 +16,7 @@ const favouriteItems = [
 
 const Favourite = () => {
   const fadeAnimations = useRef(favouriteItems.map(() => new Animated.Value(0))).current;
-
+  const router = useRouter();
   useEffect(() => {
     fadeAnimations.forEach((anim, index) => {
       Animated.timing(anim, {
@@ -23,35 +27,73 @@ const Favourite = () => {
       }).start();
     });
   }, []);
+  const dispatch = useDispatch();
+  const wishlist = useSelector((state) => state.wishlist.wishlist);
+  console.log('wiwiwi',wishlist);
+
+  const handleAddAllToCart = () => {
+    wishlist.forEach((item) => {
+      dispatch(addToCart({ ...item, quantity: 1 }));
+      dispatch(cleanWishlist())
+      router.push('/cart')
+    });
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Favourite</Text>
 
-      <FlatList
-        data={favouriteItems}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <Animated.View style={{ opacity: fadeAnimations[index] }}>
-            <TouchableOpacity style={styles.itemContainer} onPress={() => console.log(`Clicked: ${item.name}`)}>
-              <Image source={{ uri: item.image }} style={styles.itemImage} />
-              <View style={styles.itemDetails}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemSize}>{item.size}</Text>
-              </View>
-              <View style={styles.priceContainer}>
-                <Text style={styles.itemPrice}>{item.price}</Text>
-                <Ionicons name="chevron-forward" size={18} color="black" />
-              </View>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+      {wishlist.length === 0 ? (
+  <View style={styles.emptyContainer}>
+    <Ionicons name="heart-dislike-outline" size={80} color="#ccc" />
+    <Text style={styles.emptyText}>Your wishlist is empty</Text>
+  </View>
+) : (
+  <>
+    <FlatList
+      data={wishlist}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item, index }) => (
+        <Animated.View style={{ opacity: fadeAnimations[index] || 1 }}>
+          <TouchableOpacity
+            style={styles.itemContainer}
+            onPress={() =>
+              router.push({
+                pathname: "/Productdetails",
+                params: {
+                  id: item.id,
+                  name: item.name,
+                  image: item.image,
+                  price: item.price,
+                  review: item.review,
+                  nutrients: JSON.stringify(item.nutrients),
+                  productDetails: item.productDetails,
+                  size: item.size,
+                },
+              })
+            }
+          >
+            <Image source={{ uri: item.image }} style={styles.itemImage} />
+            <View style={styles.itemDetails}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.itemSize}>{item.size}</Text>
+            </View>
+            <View style={styles.priceContainer}>
+              <Text style={styles.itemPrice}>₹{item.price}</Text>
+              <Ionicons name="chevron-forward" size={18} color="black" />
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+      contentContainerStyle={{ paddingBottom: 100 }}
+    />
 
-      <TouchableOpacity style={styles.addToCartButton}>
-        <Text style={styles.buttonText}>Add All To Cart</Text>
-      </TouchableOpacity>
+    <TouchableOpacity style={styles.addToCartButton} onPress={handleAddAllToCart}>
+      <Text style={styles.buttonText}>Add All To Cart</Text>
+    </TouchableOpacity>
+  </>
+)}
+
     </View>
   );
 };
@@ -63,7 +105,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 15,
+  },emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
+  emptyText: {
+    fontSize: 16,
+    color: "#999",
+    marginTop: 10,
+  },
+  
   header: {
     fontSize: 22,
     fontWeight: "bold",

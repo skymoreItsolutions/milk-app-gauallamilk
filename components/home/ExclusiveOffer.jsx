@@ -69,7 +69,8 @@ const ExclusiveOffer = () => {
                     showsHorizontalScrollIndicator={false}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => {
-                        const cartItem = cart.find((cartItem) => cartItem.id === item.id);
+                        const cartItem = cart.find((cartItem) => cartItem.id.toString() === item.id.toString());
+
                         const quantity = cartItem ? cartItem.quantity : 0;
 
                         return (
@@ -109,7 +110,7 @@ const ExclusiveOffer = () => {
                                             <Text style={styles.quantityText}>-</Text>
                                         </TouchableOpacity>
 
-                                        <View style={styles.quantityWrapper}>
+                                       <View style={styles.quantityWrapper}>
                                             <Animated.Text
                                                 style={[
                                                     styles.quantityText,
