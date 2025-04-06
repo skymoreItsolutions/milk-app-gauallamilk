@@ -2,12 +2,20 @@ import React, { useState, useRef } from 'react';
 import { View, Image, StyleSheet, Dimensions, TouchableOpacity, Animated } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 
+
+import MilkImage from '../../assets/images/Gaualla10.webp'; 
+import GheeImage from '../../assets/images/Gaualla6.webp';
+import ButterImage from '../../assets/images/Gaualla5.webp'; 
+import SplMilkImage from '../../assets/images/Gaualla6.webp';
+
+
+
 const images = [
-  "https://static.vecteezy.com/system/resources/thumbnails/039/668/917/small_2x/ai-generated-a-bottle-of-milk-a-glass-of-milk-and-a-plate-of-cheese-on-the-table-in-front-of-the-cow-field-free-photo.jpeg",
-  "https://images8.alphacoders.com/998/998376.jpg",
-  "https://t3.ftcdn.net/jpg/05/29/62/88/360_F_529628848_KlzlgLqkPT3BifZ2q7GgfWgZRvOu95ui.jpg",
-  "https://c4.wallpaperflare.com/wallpaper/798/46/343/cheese-mold-olives-food-wallpaper-preview.jpg",
-  "https://t3.ftcdn.net/jpg/11/57/90/12/360_F_1157901220_0ctBdFnFZWxjws0Z3OvcX7764FWdCLGm.jpg"
+  MilkImage,
+  GheeImage,
+  ButterImage,
+  SplMilkImage,
+
 ];
 
 const screenWidth = Dimensions.get('window').width;
@@ -42,7 +50,7 @@ const MyCarousel = () => {
         data={images}
         onSnapToItem={moveIndicator} 
         renderItem={({ item }) => (
-          <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
+          <Image source={item} style={styles.image} resizeMode="cover" />
         )}
       />
 

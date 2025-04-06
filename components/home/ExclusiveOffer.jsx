@@ -84,7 +84,7 @@ const ExclusiveOffer = () => {
                                 productDetails: item.productDetails,
                                 size: item.size,
                             }})}>
-                                <Image source={{ uri: item.image }} style={styles.productImage} />
+                                <Image source={item.image} style={styles.productImage} />
 
                                 <View style={styles.nameContainer}>
                                     <Text style={styles.productName}>{item.name}</Text>
