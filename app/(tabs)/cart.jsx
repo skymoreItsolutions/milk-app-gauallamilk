@@ -159,7 +159,7 @@ useEffect(() => {
 >
 
               <View style={styles.itemContainer}>
-                <Image source={{ uri: item.image }} style={styles.itemImage} />
+                <Image source={ item.image } style={styles.itemImage} />
                 <View style={styles.itemDetails}>
                   <Text style={styles.itemName}>{item.name}</Text>
                   <Text style={styles.itemSize}>{item.size}</Text>

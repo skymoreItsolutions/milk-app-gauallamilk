@@ -65,7 +65,7 @@ const Productdetails = () => {
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer} contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.imageWrapper}>
-          <Image source={{ uri: params.image }} style={styles.productImage} />
+          <Image source={ params.image } style={styles.productImage} />
           <View style={styles.topIcons}>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
               <AntDesign name="arrowleft" size={24} color="black" />

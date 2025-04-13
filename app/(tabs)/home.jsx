@@ -24,7 +24,9 @@ const Home = () => {
 const [selectedPriceRange, setSelectedPriceRange] = useState(null);
 const animatedWidth = useRef(new Animated.Value(1)).current;
 
-
+useEffect(() => {
+  console.log("Filtered Items:", filteredItems);
+}, [filteredItems]);
 
 useEffect(() => {
   Animated.timing(animatedWidth, {
@@ -110,14 +112,17 @@ useEffect(() => {
 
   const renderSearchResults = () => (
     <Animated.FlatList
-        data={filteredItems}
-        style={{marginBottom:50}}
-        keyExtractor={(item) => item.name}
-        renderItem={({ item,index }) => (
-           <SearchFilter key={index} item={item} entering={FadeIn.delay(index * 100)}/>
-        )}
+      data={filteredItems}
+      style={{ marginBottom: 50 }}
+      keyExtractor={(item) => item.name}
+      renderItem={({ item, index }) => (
+        <Animated.View entering={FadeIn.delay(index * 100)}>
+          <SearchFilter key={index} item={item} />
+        </Animated.View>
+      )}
     />
-);
+  );
+  
 
   return (<>
     <Animated.ScrollView 

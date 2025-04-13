@@ -13,7 +13,7 @@ const ExclusiveOffer = () => {
     const dispatch = useDispatch();
     const cart = useSelector((state) => state.cart.cart);
     const router = useRouter();
-
+    console.log(cart)
     useEffect(() => {
         Animated.timing(fadeAnim, {
             toValue: 1,

@@ -90,7 +90,7 @@ const BestSeller = ({ scrollY }) => {
                 }})}
             >
                 <Animated.View style={[styles.card, { opacity, transform: [{ translateY }, { scale }] }]}>
-                    <Image source={{ uri: item.image }} style={styles.image} />
+                    <Image source={ item.image } style={styles.image} />
                     <View style={styles.textContainer}>
                         <Text style={styles.cardTitle} numberOfLines={2}>{item.name}</Text>
                         <Text style={styles.cardQuantity}>{item.size}</Text>
